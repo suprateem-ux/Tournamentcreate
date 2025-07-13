@@ -24,5 +24,5 @@ jobs:
 
       - name: 🚀 Run tournament creator
         env:
-          LICHESS_TOKEN: ${{ secrets.TOKEN }}
+          LICHESS_TOKEN: ${{ secrets.KEY }}
         run: python tmt.py
