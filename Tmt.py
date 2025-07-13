@@ -1,0 +1,82 @@
+import requests
+from datetime import datetime, timedelta
+import pytz
+
+# === CONFIG ===
+API_TOKEN = "lip_GwUbRqwUlQmnJb0kQyh4"
+TEAM_ID = "international-chess-talent"
+API_URL = "https://lichess.org/api/tournament"
+
+HEADERS = {
+    "Authorization": f"Bearer {API_TOKEN}"
+}
+
+# === TOURNAMENT SCHEDULE ===
+# Format: (IST time, base, increment, rounds)
+TOURNAMENTS = [
+    ("2:00 PM", 7, 2, 5),     # 3rd set
+    ("3:30 PM", 7, 2, 6),     # 2nd set
+    ("4:30 PM", 5, 2, 8),
+    ("5:00 PM", 5, 0, 8),
+    ("5:00 PM", 10, 0, 8),
+    ("5:30 PM", 3, 2, 8),
+    ("6:00 PM", 10, 0, 6),
+    ("6:30 PM", 5, 1, 6),
+    ("6:30 PM", 7, 2, 6),
+    ("8:00 PM", 10, 0, 6),
+    ("8:30 PM", 3, 2, 6),
+    ("9:00 PM", 5, 0, 8),
+    ("9:30 PM", 3, 2, 8),
+    ("10:30 PM", 5, 2, 8),
+    ("11:30 PM", 3, 2, 8),
+]
+
+def ist_to_utc_timestamp(ist_time_str):
+    ist = pytz.timezone("Asia/Kolkata")
+    now = datetime.now(ist)
+    time_obj = datetime.strptime(ist_time_str, "%I:%M %p").time()
+    combined = datetime.combine(now.date(), time_obj)
+    if combined < now:
+        combined += timedelta(days=1)
+    utc_time = combined.astimezone(pytz.utc)
+    return int(utc_time.timestamp() * 1000)
+
+def get_tournament_name(index, time_str, base, inc, rounds):
+    # Identify sets
+    if time_str == "2:00 PM":
+        prefix = "Grand Chess Tournament"  # 3rd set
+    elif time_str >= "3:30 PM":
+        prefix = "Grand Swiss"  # 2nd set
+    else:
+        prefix = "Free Practice Tournament"  # 1st set
+
+    today = datetime.now().strftime("%b %d")
+    return f"{prefix} | {base}+{inc} | {rounds}R | {today} #{index + 1}"
+
+def create_tournament(name, start_time, base, increment, rounds):
+    payload = {
+        "clock.limit": base * 60,
+        "clock.increment": increment,
+        "startDate": ist_to_utc_timestamp(start_time),
+        "variant": "standard",
+        "rated": "true",
+        "name": name,
+        "nbRounds": rounds,
+        "tournamentType": "swiss",
+        "teamId": TEAM_ID
+    }
+
+    response = requests.post(API_URL, headers=HEADERS, data=payload)
+
+    if response.status_code == 200:
+        print(f"✅ Created: {name}")
+    else:
+        print(f"❌ Failed: {name} | {response.status_code} - {response.text}")
+
+def main():
+    for idx, (time_str, base, inc, rounds) in enumerate(TOURNAMENTS):
+        name = get_tournament_name(idx, time_str, base, inc, rounds)
+        create_tournament(name, time_str, base, inc, rounds)
+
+if __name__ == "__main__":
+    main()
