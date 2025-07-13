@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 import os
+import time
 
 # ✅ Secure API token from GitHub Secrets (env variable)
 API_TOKEN = os.getenv("LICHESS_TOKEN")
@@ -77,10 +78,14 @@ def create_tournament(name, start_time, base, increment, rounds):
         print(f"❌ Failed: {name} | {response.status_code} - {response.text}")
 
 # ✅ Loop through all tournament entries
+ # ⏱️ required for sleep()
 def main():
     for idx, (time_str, base, inc, rounds) in enumerate(TOURNAMENTS):
         name = get_tournament_name(idx, time_str, base, inc, rounds)
         create_tournament(name, time_str, base, inc, rounds)
+        if idx != len(TOURNAMENTS) - 1:
+            print("⏳ Waiting 15 minutes before next tournament...")
+            time.sleep(15 * 60)  # wait 900 seconds = 15 minutes
 
 if __name__ == "__main__":
     main()
