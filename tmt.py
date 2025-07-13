@@ -4,7 +4,7 @@ import pytz
 import os
 
 # ✅ Secure API token from environment variable
-API_TOKEN = os.getenv("LICHESS_TOKEN")
+API_TOKEN = os.getenv("TOKEN")
 TEAM_ID = "international-chess-talent"
 API_URL = "https://lichess.org/api/tournament"
 
