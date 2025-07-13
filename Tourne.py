@@ -60,7 +60,7 @@ def create_tournament(name, start_time, base, increment, rounds):
         "name": name,
         "clockTime": base,
         "clockIncrement": increment,
-        "minutes": rounds * 2,  # buffer time per round
+        "minutes": 720,  # buffer time per round
         "startDate": ist_to_utc_timestamp(start_time),
         "variant": "standard",
         "rated": "true",
