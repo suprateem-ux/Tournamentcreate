@@ -77,7 +77,7 @@ def main():
         utc_millis, tournament_time = ist_to_utc_timestamp(time_str)
         utc_dt = datetime.fromtimestamp(utc_millis / 1000, tz=timezone.utc)
         # Only create if tournament is within 15 minutes in future
-        if 0 <= (utc_dt - now_utc).total_seconds() < 900:
+        if 0 <= (utc_dt - now_utc).total_seconds() < 300:
             name = get_tournament_name(idx, time_str, base, inc, rounds)
             create_tournament(name, time_str, base, inc, rounds)
             break
