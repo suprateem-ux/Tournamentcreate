@@ -27,4 +27,4 @@ jobs:
           sed -i "s/API_TOKEN = .*/API_TOKEN = '${{ secrets.LICHESS_TOKEN }}'/" Tmt.py
 
       - name: 🚀 Run tournament creator
-        run: python tmt.py
+        run: python Tmt.py
