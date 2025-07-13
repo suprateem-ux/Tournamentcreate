@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 import os
+from datetime import timezone
 
 API_TOKEN = os.getenv("LICHESS_TOKEN")
 TEAM_ID = "international-chess-talent"
@@ -71,10 +72,10 @@ def create_tournament(name, start_time, base, increment, rounds):
         print(f"❌ Error while creating tournament: {e}")
 
 def main():
-    now_utc = datetime.utcnow()
+    now_utc = datetime.now(timezone.utc)
     for idx, (time_str, base, inc, rounds) in enumerate(TOURNAMENTS):
         utc_millis, tournament_time = ist_to_utc_timestamp(time_str)
-        utc_dt = datetime.utcfromtimestamp(utc_millis / 1000)
+        utc_dt = datetime.fromtimestamp(utc_millis / 1000, tz=timezone.utc)
         # Only create if tournament is within 15 minutes in future
         if 0 <= (utc_dt - now_utc).total_seconds() < 900:
             name = get_tournament_name(idx, time_str, base, inc, rounds)
