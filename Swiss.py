@@ -66,7 +66,7 @@ def create_tournament(name, start_time_str, base, inc, rounds):
         "nbRounds": rounds,
         "variant": "standard",
         "rated": True,
-        "description": DESCRIPTION
+        "description": DESCRIPTION,
         "teamId": TEAM_ID
     }
 
