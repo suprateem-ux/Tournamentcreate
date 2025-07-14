@@ -67,6 +67,7 @@ def create_tournament(name, start_time_str, base, inc, rounds):
         "variant": "standard",
         "rated": True,
         "description": DESCRIPTION
+        "teamId": TEAM_ID
     }
 
     r = requests.post(API_URL, headers=HEADERS, data=payload)
