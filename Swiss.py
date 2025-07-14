@@ -65,9 +65,10 @@ def create_tournament(name, start_time_str, base, inc, rounds):
         "startsAt": start_iso,
         "nbRounds": rounds,
         "variant": "standard",
-        "rated": True,
+        "rated": "True",
         "description": DESCRIPTION,
-        "teamId": TEAM_ID
+        "interval": 15,
+       # "teamId": TEAM_ID
     }
 
     r = requests.post(API_URL, headers=HEADERS, data=payload)
