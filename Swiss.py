@@ -6,7 +6,7 @@ import pathlib
 import json
 
 # === Config ===
-API_TOKEN = os.getenv("KEY")
+API_TOKEN = os.environ("KEY")
 TEAM_ID = "international-chess-talent"
 DESC_FILE = pathlib.Path(__file__).with_name("description.txt")
 
