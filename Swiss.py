@@ -59,7 +59,7 @@ def create_tournament(name, start_time_str, base, inc, rounds):
     print(f"🛠 Creating '{name}' for start at {start_iso}")
 
     payload = {
-        "name": name[:30],
+        "name": name,
         "clock.limit": base * 60,
         "clock.increment": inc,
         "startsAt": start_iso,
