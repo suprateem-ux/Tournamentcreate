@@ -24,3 +24,5 @@ jobs:
 
       - name: 🚀 Run tournament creator
         run: python Swiss.py
+        env:
+          KEY: ${{ secrets.KEY }}
