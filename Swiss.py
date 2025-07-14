@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytz
 import os
 import pathlib
+import json
 
 # === Config ===
 API_TOKEN = os.getenv("LICHESS_TOKEN")
@@ -17,7 +18,7 @@ except FileNotFoundError:
     raise SystemExit("❌ description.txt not found!")
 
 # === API Setup ===
-API_URL =  f"https://lichess.org/api/swiss/new/{TEAM_ID}"
+API_URL = f"https://lichess.org/api/swiss/new/{TEAM_ID}"
 HEADERS = {
     "Authorization": f"Bearer {API_TOKEN}"
 }
@@ -63,17 +64,22 @@ def create_tournament(name, start_time_str, base, inc, rounds):
         "clock.increment": inc,
         "startsAt": start_iso,
         "nbRounds": rounds,
-        "interval": 15,
         "variant": "standard",
-        "rated": "true",
+        "rated": True,
         "description": DESCRIPTION
     }
 
     r = requests.post(API_URL, headers=HEADERS, data=payload)
     if r.status_code == 200:
-        print(f"✅ Created: {r.json().get('url')}")
+        response_data = r.json()
+        print(f"✅ Created: {response_data.get('id')} @ {response_data.get('startsAt')}")
+        print(json.dumps(response_data, indent=2))
     else:
-        print(f"❌ Failed: {r.status_code} - {r.text}")
+        try:
+            print("❌ Error:")
+            print(json.dumps(r.json(), indent=2))
+        except Exception:
+            print(f"❌ Failed: {r.status_code} - {r.text}")
 
 def main():
     now_utc = datetime.now(timezone.utc)
