@@ -1,16 +1,28 @@
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytz
 import os
-from datetime import timezone
+import pathlib
 
+# === Config ===
 API_TOKEN = os.getenv("LICHESS_TOKEN")
 TEAM_ID = "international-chess-talent"
-API_URL = "https://lichess.org/api/tournament"
+DESC_FILE = pathlib.Path(__file__).with_name("description.txt")
+
+# === Load Description ===
+try:
+    with DESC_FILE.open(encoding="utf-8") as f:
+        DESCRIPTION = f.read().strip()
+except FileNotFoundError:
+    raise SystemExit("❌ description.txt not found!")
+
+# === API Setup ===
+API_URL = f"https://lichess.org/api/swiss/new/{TEAM_ID}"
 HEADERS = {
     "Authorization": f"Bearer {API_TOKEN}"
 }
 
+# ✅ Full Daily Schedule (IST)
 TOURNAMENTS = [
     ("2:00 PM", 7, 2, 5),
     ("3:30 PM", 7, 2, 6),
@@ -26,61 +38,54 @@ TOURNAMENTS = [
     ("9:00 PM", 5, 0, 8),
     ("9:30 PM", 3, 2, 8),
     ("10:30 PM", 5, 2, 8),
-    ("11:30 PM", 3, 2, 8)
+    ("11:30 PM", 3, 2, 8),
 ]
 
-def ist_to_utc_timestamp(ist_time_str):
+def ist_to_utc_start_str(ist_time_str):
     ist = pytz.timezone("Asia/Kolkata")
     now = datetime.now(ist)
     time_obj = datetime.strptime(ist_time_str, "%I:%M %p").time()
-    combined = datetime.combine(now.date(), time_obj)
-    combined = ist.localize(combined)
-    if combined < now:
-        combined += timedelta(days=1)
-    utc_time = combined.astimezone(pytz.utc)
-    return int(utc_time.timestamp() * 1000), combined
+    start_dt = datetime.combine(now.date(), time_obj)
+    start_dt = ist.localize(start_dt)
 
-def get_tournament_name(index, time_str, base, inc, rounds):
-    prefix = "GCT" if time_str == "2:00 PM" else "GS" if time_str >= "3:30 PM" else "FPT"
-    today = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%b%d")
-    return f"{prefix} {base}+{inc} {rounds}R {today} {index+1}"
+    if start_dt < now:
+        start_dt += timedelta(days=1)
 
-def create_tournament(name, start_time, base, increment, rounds):
-    utc_timestamp, ist_datetime = ist_to_utc_timestamp(start_time)
-    print(f"🛠 Trying to create tournament for {ist_datetime.strftime('%I:%M %p')} IST...")
+    return start_dt.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def create_tournament(name, start_time_str, base, inc, rounds):
+    start_iso = ist_to_utc_start_str(start_time_str)
+    print(f"🛠 Creating '{name}' for start at {start_iso}")
 
     payload = {
-        "name": name,
-        "clockTime": base,
-        "clockIncrement": increment,
-        "minutes": 720,
-        "startDate": utc_timestamp,
+        "name": name[:30],
+        "clock.limit": base * 60,
+        "clock.increment": inc,
+        "startsAt": start_iso,
+        "nbRounds": rounds,
+        "interval": 15,
         "variant": "standard",
         "rated": "true",
-        "nbRounds": rounds,
-        "tournamentType": "swiss",
-        "teamId": TEAM_ID
+        "description": DESCRIPTION
     }
 
-    try:
-        response = requests.post(API_URL, headers=HEADERS, data=payload)
-        if response.status_code == 200:
-            print(f"✅ Created: {name}")
-        else:
-            print(f"❌ Failed: {name} | {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"❌ Error while creating tournament: {e}")
+    r = requests.post(API_URL, headers=HEADERS, data=payload)
+    if r.status_code == 200:
+        print(f"✅ Created: {r.json().get('url')}")
+    else:
+        print(f"❌ Failed: {r.status_code} - {r.text}")
 
 def main():
     now_utc = datetime.now(timezone.utc)
     for idx, (time_str, base, inc, rounds) in enumerate(TOURNAMENTS):
-        utc_millis, tournament_time = ist_to_utc_timestamp(time_str)
-        utc_dt = datetime.fromtimestamp(utc_millis / 1000, tz=timezone.utc)
-        # Only create if tournament is within 15 minutes in future
-        if 0 <= (utc_dt - now_utc).total_seconds() < 900:
-            name = get_tournament_name(idx, time_str, base, inc, rounds)
+        start_iso = ist_to_utc_start_str(time_str)
+        start_dt = datetime.strptime(start_iso, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+        # If the tournament is due within the next 15 minutes
+        if 0 <= (start_dt - now_utc).total_seconds() < 900:
+            name = f"{base}+{inc} {rounds}R {time_str} T{idx+1}"
             create_tournament(name, time_str, base, inc, rounds)
-            break
+            break  # Only one tournament per run
 
 if __name__ == "__main__":
     main()
