@@ -17,7 +17,7 @@ except FileNotFoundError:
     raise SystemExit("❌ description.txt not found!")
 
 # === API Setup ===
-API_URL = f"https://lichess.org/api/swiss/new/{TEAM_ID}"
+API_URL = f"https://lichess.org/api/team/{TEAM_ID}/swiss/new"
 HEADERS = {
     "Authorization": f"Bearer {API_TOKEN}"
 }
