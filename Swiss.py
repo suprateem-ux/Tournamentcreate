@@ -2,11 +2,16 @@
 import requests
 import random
 import os
+import sys
 
 TEAM_ID = "darkonswiss-dos"
-API_TOKEN = os.environ["KEY"]  # put your lichess personal API token here
 
-# Define tournament options
+# Get API token from environment
+API_TOKEN = os.environ.get("KEY")
+if not API_TOKEN:
+    sys.exit("Error: API token not found. Please set KEY environment variable.")
+
+# Define Swiss formats
 OPTIONS = [
     {"name": "DOS BLIZ SWISS",  "clock": {"limit": 180,  "increment": 0}, "nbRounds": 11},   # 3+0
     {"name": "DOS RAPID SWISS", "clock": {"limit": 600,  "increment": 0}, "nbRounds": 9},    # 10+0
@@ -19,38 +24,41 @@ def read_description():
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
             return f.read().strip()
-    return "Welcome to our Swiss tournament!"
+    return "This team offers hourly swisses!"
 
 def create_swiss():
+    # Pick a random format
     option = random.choice(OPTIONS)
     description = read_description()
 
+    # Prepare payload for form submission
     payload = {
         "name": option["name"],
-        "clock.limit": option["clock"]["limit"],
-        "clock.increment": option["clock"]["increment"],
+        "clock[limit]": option["clock"]["limit"],
+        "clock[increment]": option["clock"]["increment"],
         "nbRounds": option["nbRounds"],
-        "rated": "true",
+        "rated": "true",            # form requires string
         "description": description,
     }
 
-    url = f"https://lichess.org/api/swiss/new/{TEAM_ID}"
-    headers = {
-        "Authorization": f"Bearer {API_TOKEN}"
-    }
+    print(f"Creating tournament: {option['name']} ({option['clock']['limit']//60}+{option['clock']['increment']}, {option['nbRounds']} rounds)")
 
-    print(f"Creating tournament: {payload['name']} "
-          f"({payload['clock.limit']//60}+{payload['clock.increment']}, "
-          f"{payload['nbRounds']} rounds)")
+    url = f"https://lichess.org/api/swiss/new/{TEAM_ID}"
+    headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
     r = requests.post(url, data=payload, headers=headers)
 
     if r.status_code == 200:
-        print("Tournament created successfully!")
-        print(r.json())
+        data = r.json()
+        print("✅ Tournament created successfully!")
+        print("Name:", data.get("name"))
+        print("ID:", data.get("id"))
+        print("Rounds:", data.get("nbRounds"))
+        print("Clock:", f"{data['clock']['limit']//60}+{data['clock']['increment']}")
+        print("Rated:", data.get("rated"))
+        print("URL:", f"https://lichess.org/swiss/{data.get('id')}")
     else:
-        print("Error:", r.status_code, r.text)
-
+        print("❌ Error:", r.status_code, r.text)
 
 if __name__ == "__main__":
     create_swiss()
