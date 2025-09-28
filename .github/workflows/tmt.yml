@@ -29,6 +29,6 @@ jobs:
 
       # 4️⃣ Run the Swiss script
       - name: Run swiss.py
-        run: python swiss.py
+        run: python Swiss.py
         env:
           KEY: ${{ secrets.KEY }}   # Your Lichess API token
