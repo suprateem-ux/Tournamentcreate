@@ -6,15 +6,18 @@ import sys
 
 TEAM_ID = "darkonswiss-dos"
 
+# Read token from environment variable
 API_TOKEN = os.getenv("KEY")
 if not API_TOKEN:
     sys.exit("Error: API token not found. Please set KEY environment variable.")
 
+# Tournament options
 OPTIONS = [
-    {"name": "DOS Blitz",  "clock": {"limit": 180,  "increment": 0}, "nbRounds": 11},   
-    {"name": "DOS Rapid", "clock": {"limit": 600,  "increment": 0}, "nbRounds": 9},    
-    {"name": "DOS Bullet","clock": {"limit": 60,   "increment": 0}, "nbRounds": 20},   
-    {"name": "DOS Bullet","clock": {"limit": 120,  "increment": 1}, "nbRounds": 15},   
+    {"name": "DOS Blitz",  "clock": {"limit": 180,  "increment": 0}, "nbRounds": 11},   # 3+0
+    {"name": "DOS Rapid", "clock": {"limit": 600,  "increment": 0}, "nbRounds": 9},    # 10+0
+    {"name": "DOS Bullet","clock": {"limit": 60,   "increment": 0}, "nbRounds": 20},   # 1+0
+    {"name": "DOS Bullet Increment","clock": {"limit": 120,  "increment": 1}, "nbRounds": 15},   # 2+1
+    {"name": "DOS Classical","clock": {"limit": 1800, "increment": 0}, "nbRounds": 5},
 ]
 
 def read_description():
@@ -48,7 +51,7 @@ def create_swiss():
 
     if r.status_code == 200:
         data = r.json()
-        print("Tournament created!")
+        print("✅ Tournament created!")
         print("ID:", data.get("id"))
         print("Name:", data.get("name"))
         print("Starts at:", data.get("startsAt"))
