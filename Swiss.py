@@ -30,7 +30,7 @@ def create_swiss():
         "clock.limit": option["clock"]["limit"],
         "clock.increment": option["clock"]["increment"],
         "nbRounds": option["nbRounds"],
-        "rated": True,
+        "rated": "True",
         "description": description,
     }
 
